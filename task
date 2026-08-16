@@ -1,0 +1,239 @@
+Проект: AI Project Navigator (FastAPI + Streamlit + NeuralDeep)
+Создать полноценного AI‑помощника для PM по внедрению ИИ, который:
+
+работает с документами проекта (RAG),
+
+анализирует требования, встречи, переписки,
+
+готовит к встречам,
+
+выявляет блокеры,
+
+создаёт задачи через локальный API,
+
+использует NeuralDeep как LLM‑провайдера.
+
+🧱 Технологический стек
+Backend: FastAPI (async)
+
+UI: Streamlit
+
+LLM: NeuralDeep Chat API
+
+модель: GPT‑OSS‑120B
+
+Embeddings: NeuralDeep embeddings
+
+модель: bge‑m3
+
+Векторное хранилище: ChromaDB
+
+HTTP‑клиент: httpx (async)
+
+Валидация: Pydantic v2
+
+Хранилище задач: tasks.json
+
+Переменные окружения: .env
+
+🔧 Переменные окружения
+Создать файл .env:
+
+Kod
+NEURALDEEP_API_KEY=your_key_here
+NEURALDEEP_MODEL=GPT-OSS-120B
+NEURALDEEP_EMBED_MODEL=bge-m3
+NEURALDEEP_BASE_URL=https://api.neuraldeep.ru/v1
+📁 Структура проекта (создай эти файлы)
+Copilot должен сгенерировать код для следующей структуры:
+
+Kod
+agent/
+│
+├── main.py                # FastAPI entrypoint
+├── llm.py                 # NeuralDeep client (chat + embeddings)
+├── rag.py                 # RAG pipeline (indexing + retrieval)
+├── tasks.py               # Tool/API for creating tasks
+│
+├── routes/
+│   ├── meeting.py         # /prepare_meeting
+│   ├── requirements.py    # /requirements_diff
+│   ├── blockers.py        # /find_blockers
+│   └── next_step.py       # /next_step_task
+│
+├── models/
+│   ├── meeting.py         # Pydantic schemas
+│   ├── requirements.py
+│   ├── blockers.py
+│   └── task.py
+│
+├── data/                  # Исходные материалы
+├── embeddings/            # ChromaDB storage
+├── tasks.json             # Хранилище задач
+│
+├── streamlit_app.py       # UI
+└── .env.example
+🤖 LLM‑клиент (NeuralDeep)
+Copilot должен реализовать:
+
+Chat Completions
+python
+from openai import OpenAI
+import os
+
+client = OpenAI(
+    api_key=os.getenv("NEURALDEEP_API_KEY"),
+    base_url=os.getenv("NEURALDEEP_BASE_URL")
+)
+
+async def nd_chat(messages: list[dict]):
+    response = client.chat.completions.create(
+        model=os.getenv("NEURALDEEP_MODEL"),
+        messages=messages,
+        temperature=0.2,
+        max_tokens=1200
+    )
+    return response.choices[0].message.content
+Embeddings
+python
+async def nd_embed(texts: list[str]):
+    response = client.embeddings.create(
+        model=os.getenv("NEURALDEEP_EMBED_MODEL"),
+        input=texts
+    )
+    return [e.embedding for e in response.data]
+🧠 RAG‑пайплайн
+Copilot должен реализовать:
+
+Загрузку документов из data/
+
+Нарезку на chunks (500–1000 символов)
+
+Генерацию embeddings через NeuralDeep
+
+Сохранение в ChromaDB
+
+Поиск релевантных фрагментов
+
+Формирование контекста для LLM
+
+📌 Сценарии (эндпоинты FastAPI)
+Copilot должен создать 4 маршрута:
+
+1. /prepare_meeting
+контекст проекта
+
+что решено
+
+что открыто
+
+что спросить
+
+невыполненные обещания
+
+2. /requirements_diff
+добавленные требования
+
+изменённые
+
+удалённые
+
+противоречия
+
+гипотеза актуального требования
+
+3. /find_blockers
+технические блокеры
+
+организационные
+
+ответственные
+
+следующие шаги
+
+4. /next_step_task
+генерация задачи
+
+вызов /tasks
+
+🧩 JSON‑схемы для Pydantic
+meeting.py
+python
+class MeetingPrep(BaseModel):
+    context: str
+    decisions: list[str]
+    open_questions: list[str]
+    must_ask: list[str]
+    unfulfilled_promises: list[str]
+requirements.py
+python
+class RequirementsDiff(BaseModel):
+    added: list[str]
+    changed: list[str]
+    removed: list[str]
+    conflicts: list[dict]
+    current_hypothesis: str
+blockers.py
+python
+class Blockers(BaseModel):
+    technical: list[str]
+    organizational: list[str]
+    responsibles: list[dict]
+    next_steps: list[str]
+task.py
+python
+class TaskModel(BaseModel):
+    title: str
+    description: str
+    priority: str
+    assignee: str
+🛠 Tool/API — создание задачи
+Copilot должен создать эндпоинт:
+
+python
+@app.post("/tasks")
+async def create_task(task: TaskModel):
+    with open("tasks.json", "a") as f:
+        f.write(task.json() + "\n")
+    return {"status": "ok", "task": task}
+🎨 Streamlit UI
+Copilot должен создать:
+
+выбор проекта
+
+кнопки:
+
+подготовка к встрече
+
+изменения требований
+
+блокеры
+
+создать задачу
+
+отображение JSON‑ответов
+
+вызов FastAPI
+
+🔥 Требования к коду
+Copilot должен:
+
+использовать async/await
+
+использовать httpx
+
+использовать Pydantic v2
+
+использовать ChromaDB
+
+использовать OpenAI‑совместимый клиент для NeuralDeep
+
+строго соблюдать структуру проекта
+
+генерировать JSON‑ответы
+
+валидировать ответы модели
+
+обрабатывать ошибки модели и API
+
+логировать ошибки
