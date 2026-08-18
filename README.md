@@ -1,248 +1,347 @@
-AI Project Navigator — персональный AI‑помощник для PM по внедрению ИИ
-FastAPI · Streamlit · NeuralDeep · ChromaDB · RAG
+#  AI Project Navigator
 
- Описание проекта
-AI Project Navigator — это персональный AI‑агент для сотрудников Система.Поток, который помогает работать с проектами внедрения корпоративного ИИ.
-Он анализирует материалы проекта (встречи, переписки, ТЗ, логи), выявляет изменения требований, готовит к встречам, находит блокеры и создаёт задачи.
+> AI-помощник для PM по внедрению ИИ — анализирует документы проекта, выявляет блокеры, готовит к встречам и создаёт задачи.
 
-Агент использует:
+---
 
-NeuralDeep (GPT‑OSS‑120B) как LLM‑движок
+##  Описание
 
-NeuralDeep bge‑m3 для embeddings
+**AI Project Navigator** — это полноценный AI-агент, разработанный для Product Manager'ов, ведущих проекты по внедрению искусственного интеллекта. Система работает на базе **NeuralDeep GPT-OSS-120B** с RAG-пайплайном на **ChromaDB**, предоставляя контекстные ответы на основе реальных документов проекта.
 
-ChromaDB для векторного поиска
+### Ключевые возможности
 
-FastAPI для backend
+-  **RAG (Retrieval-Augmented Generation)** — работа с документами проекта (требования, встречи, переписки)
+-  **Подготовка к встречам** — контекст, открытые вопросы, невыполненные обещания
+-  **Анализ требований** — дифф между версиями, противоречия, актуальная гипотеза
+-  **Выявление блокеров** — технические и организационные, с ответственными
+-  **Создание задач** — генерация и сохранение через локальный API
 
-Streamlit для интерфейса
+---
 
-RAG‑подход для работы с документами
+##  Технологический стек
 
- Основные возможности
-1. Подготовка к встрече
-Агент анализирует последние материалы проекта и формирует:
+| Компонент        | Технология                          |
+|------------------|-------------------------------------|
+| Backend          | FastAPI (async)                     |
+| UI               | Streamlit                           |
+| LLM              | NeuralDeep GPT-OSS-120B             |
+| Embeddings       | NeuralDeep bge-m3                   |
+| Векторное хранилище | ChromaDB                         |
+| HTTP-клиент      | httpx (async)                       |
+| Валидация        | Pydantic v2                         |
+| Хранилище задач  | tasks.json                          |
+| Окружение        | python-dotenv                       |
 
-контекст проекта
+---
 
-принятые решения
+##  Структура проекта
 
-открытые вопросы
-
-что обязательно спросить
-
-невыполненные обещания клиенту
-
-2. Изменения требований
-Агент сравнивает материалы и выявляет:
-
-добавленные требования
-
-изменённые
-
-удалённые
-
-противоречия (например, разные сроки)
-
-гипотезу актуального требования
-
-3. Поиск блокеров
-Агент определяет:
-
-технические блокеры
-
-организационные
-
-ответственных
-
-предложенные следующие шаги
-
-4. Создание задачи
-Агент формирует задачу и вызывает локальный API /tasks, который сохраняет её в tasks.json.
-
- Архитектура
- agent/
+```
+tech_test_ai_pm_lead/
 │
-├── main.py                # FastAPI entrypoint
-├── llm.py                 # NeuralDeep client (chat + embeddings)
-├── rag.py                 # RAG pipeline (indexing + retrieval)
-├── tasks.py               # Tool/API for creating tasks
+├── agent/
+│   ├── main.py              # FastAPI entrypoint
+│   ├── llm.py               # NeuralDeep client (chat + embeddings)
+│   ├── rag.py               # RAG-пайплайн (индексация + поиск)
+│   ├── tasks.py             # Tool/API для создания задач
+│   ├── utils.py             # Вспомогательные функции
+│   ├── __init__.py
+│   │
+│   ├── routes/
+│   │   ├── meeting.py       # POST /prepare_meeting
+│   │   ├── requirements.py  # POST /requirements_diff
+│   │   ├── blockers.py      # POST /find_blockers
+│   │   └── next_step.py     # POST /next_step_task
+│   │
+│   ├── models/
+│   │   ├── meeting.py       # Pydantic: MeetingPrep
+│   │   ├── requirements.py  # Pydantic: RequirementsDiff
+│   │   ├── blockers.py      # Pydantic: Blockers
+│   │   └── task.py          # Pydantic: TaskModel
+│   │
+│   ├── data/                # Документы проекта (.md, .txt и др.)
+│   │   └── sample_project.md
+│   │
+│   ├── embeddings/          # ChromaDB storage (создаётся автоматически)
+│   └── streamlit_app.py     # Streamlit UI
 │
-├── routes/
-│   ├── meeting.py         # /prepare_meeting
-│   ├── requirements.py    # /requirements_diff
-│   ├── blockers.py        # /find_blockers
-│   └── next_step.py       # /next_step_task
-│
-├── models/
-│   ├── meeting.py         # Pydantic schemas
-│   ├── requirements.py
-│   ├── blockers.py
-│   └── task.py
-│
-├── data/                  # Исходные материалы
-├── embeddings/            # ChromaDB storage
-├── tasks.json             # Хранилище задач
-│
-├── streamlit_app.py       # UI
-└── .env.example
+├── requirements.txt
+├── .env                     # Секреты (не коммитить!)
+├── .env.example             # Шаблон переменных окружения
+├── .gitignore
+└── task                     # Техническое задание
+```
 
-Используемые технологии
-FastAPI (async) — backend
+---
 
-Streamlit — UI
+##  Установка и запуск
 
-NeuralDeep GPT‑OSS‑120B — LLM
+### 1. Клонирование и создание окружения
 
-NeuralDeep bge‑m3 — embeddings
+```bash
+git clone <repo-url>
+cd tech_test_ai_pm_lead
 
-ChromaDB — векторное хранилище
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# Linux/macOS
+source .venv/bin/activate
+```
 
-httpx — async HTTP‑клиент
+### 2. Установка зависимостей
 
-Pydantic v2 — строгие JSON‑схемы
+```bash
+pip install -r requirements.txt
+```
 
-RAG — поиск по документам
+### 3. Настройка переменных окружения
 
-Переменные окружения
-Создайте файл .env:
+Скопируйте `.env.example` в `.env` и заполните своими данными:
+
+```bash
+cp .env.example .env
+```
+
+```env
 NEURALDEEP_API_KEY=your_key_here
 NEURALDEEP_MODEL=GPT-OSS-120B
 NEURALDEEP_EMBED_MODEL=bge-m3
 NEURALDEEP_BASE_URL=https://api.neuraldeep.ru/v1
+```
 
-Установка и запуск
-1. Клонировать репозиторий
-   git clone <your-repo-url>
-   cd agent
-2. Установить зависимости
-   pip install -r requirements.txt
-3. Создать .env
-   cp .env.example .env
-4. Запустить FastAPI
-   uvicorn main:app --reload
-5. Запустить Streamlit UI
-   streamlit run streamlit_app.py
+### 4. Добавление документов проекта
 
-RAG‑пайплайн
-Агент использует Retrieval‑Augmented Generation:
+Поместите документы проекта (`.md`, `.txt`) в папку `agent/data/`.  
+Файл `agent/data/sample_project.md` содержит пример с демо-данными.
 
-Загрузка документов из data/
+### 5. Запуск FastAPI backend
 
-Нарезка на chunks (500–1000 символов)
+```bash
+uvicorn agent.main:app --reload --port 8000
+```
 
-Генерация embeddings через NeuralDeep bge‑m3
+API будет доступен по адресу: [http://localhost:8000](http://localhost:8000)  
+Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-Сохранение в ChromaDB
+### 6. Запуск Streamlit UI
 
-Поиск релевантных фрагментов
+В отдельном терминале:
 
-Формирование контекста для LLM
+```bash
+streamlit run agent/streamlit_app.py
+```
 
-Генерация структурированного JSON‑ответа
+UI будет доступен по адресу: [http://localhost:8501](http://localhost:8501)
 
-API‑эндпоинты
-/prepare_meeting
-Подготовка к встрече.
+---
 
-/requirements_diff
-Изменения требований.
+##  API Endpoints
 
-/find_blockers
-Поиск блокеров.
+### `GET /`
+Health-check.
 
-/next_step_task
-Генерация задачи.
+```json
+{ "status": "ok", "service": "AI Project Navigator" }
+```
 
-/tasks
-Создание задачи (локальный tool/API).
+---
 
-JSON‑схемы
-MeetingPrep
+### `POST /prepare_meeting`
+Подготовка к встрече на основе документов проекта.
+
+**Request body:**
+```json
 {
-  "context": "...",
-  "decisions": ["..."],
-  "open_questions": ["..."],
-  "must_ask": ["..."],
-  "unfulfilled_promises": ["..."]
+  "query": "Подготовь меня к встрече по статусу проекта"
 }
+```
 
-RequirementsDiff
+**Response (`MeetingPrep`):**
+```json
 {
-  "added": ["..."],
-  "changed": ["..."],
-  "removed": ["..."],
-  "conflicts": [
-    {
-      "field": "deadline",
-      "values": ["2024-10-01", "2024-12-15"],
-      "sources": ["meeting_2024_09_15.txt", "email_2024_09_20.txt"]
-    }
-  ],
-  "current_hypothesis": "..."
+  "context": "Краткий контекст проекта...",
+  "decisions": ["ChromaDB одобрен как векторное хранилище"],
+  "open_questions": ["Бюджет на GPU ещё не утверждён"],
+  "must_ask": ["Когда CTO подпишет бюджет?"],
+  "unfulfilled_promises": ["Denis: прототип RAG до 22 августа"]
 }
+```
 
-Blockers
+---
+
+### `POST /requirements_diff`
+Анализ изменений требований.
+
+**Request body:**
+```json
 {
-  "technical": ["..."],
-  "organizational": ["..."],
-  "responsibles": [
-    {"blocker": "...", "person": "..."}
-  ],
-  "next_steps": ["..."]
+  "query": "Какие требования изменились за последний месяц?"
 }
+```
 
-TaskModel
+**Response (`RequirementsDiff`):**
+```json
 {
-  "title": "...",
-  "description": "...",
+  "added": ["Требование on-premise развёртывания"],
+  "changed": ["SLA с 5с → 3с (P95)"],
+  "removed": ["Анализ тональности чатов"],
+  "conflicts": [{"issue": "On-premise vs 3s SLA", "parties": ["Denis", "Olga"]}],
+  "current_hypothesis": "Актуальное требование v1.3..."
+}
+```
+
+---
+
+### `POST /find_blockers`
+Выявление блокеров проекта.
+
+**Request body:**
+```json
+{
+  "query": "Какие блокеры есть сейчас?"
+}
+```
+
+**Response (`Blockers`):**
+```json
+{
+  "technical": ["GPU серверы задержаны до 15 сентября"],
+  "organizational": ["CFO в отпуске, бюджет завис"],
+  "responsibles": [{"blocker": "GPU budget", "owner": "Maria Ivanova"}],
+  "next_steps": ["Запросить облачный GPU как временное решение"]
+}
+```
+
+---
+
+### `POST /next_step_task`
+Генерация следующей задачи и её сохранение.
+
+**Request body:**
+```json
+{
+  "query": "Что нужно сделать прямо сейчас?"
+}
+```
+
+**Response (`TaskModel`):**
+```json
+{
+  "title": "Оценить облачный GPU для RAG-тестирования",
+  "description": "Из-за задержки on-premise серверов...",
   "priority": "high",
-  "assignee": "PM"
+  "assignee": "Denis Volkov"
 }
+```
 
-Tool/API — создание задачи
-Эндпоинт:
-POST /tasks
+---
 
-Сохраняет задачу в tasks.json.
+### `POST /tasks`
+Прямое создание задачи (запись в `tasks.json`).
 
-🎨 Streamlit UI
-Функции:
+**Request body (`TaskModel`):**
+```json
+{
+  "title": "Название задачи",
+  "description": "Описание",
+  "priority": "high",
+  "assignee": "Имя"
+}
+```
 
-выбор проекта
+---
 
-кнопки сценариев
+### `POST /index`
+Принудительная переиндексация всех документов из `data/`.
 
-отображение JSON‑ответов
+```json
+{ "status": "ok", "chunks_indexed": 42 }
+```
 
-кнопка «Создать задачу»
+---
 
-🧪 Проблемные сценарии (обязательное требование теста)
-Агент обрабатывает:
+##  Архитектура RAG-пайплайна
 
-недостаток данных
+```
+agent/data/*.md,*.txt
+        │
+        ▼
+  [Chunker] 500–1000 символов
+        │
+        ▼
+  [NeuralDeep bge-m3] → embeddings
+        │
+        ▼
+  [ChromaDB] — векторное хранилище
+        │
+        ▼
+  [Query] → top-k релевантных чанков
+        │
+        ▼
+  [NeuralDeep GPT-OSS-120B] + контекст → ответ
+```
 
-противоречивые требования
+---
 
-ошибки API
+##  Pydantic-модели
 
-некорректный формат ответа модели
+| Модель            | Поля                                                                        |
+|-------------------|-----------------------------------------------------------------------------|
+| `MeetingPrep`     | `context`, `decisions`, `open_questions`, `must_ask`, `unfulfilled_promises`|
+| `RequirementsDiff`| `added`, `changed`, `removed`, `conflicts`, `current_hypothesis`            |
+| `Blockers`        | `technical`, `organizational`, `responsibles`, `next_steps`                 |
+| `TaskModel`       | `title`, `description`, `priority`, `assignee`                              |
 
-отсутствие релевантных документов
+---
 
-AI Usage Note
-В проекте использовались AI‑инструменты для:
+##  Зависимости
 
-генерации архитектуры
+```
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+openai>=1.35.0
+chromadb>=0.5.0
+httpx>=0.27.0
+pydantic>=2.7.0
+pydantic-settings>=2.3.0
+python-dotenv>=1.0.0
+streamlit>=1.35.0
+tqdm>=4.66.0
+```
 
-проектирования структуры файлов
+---
 
-написания промптов
+##  Безопасность
 
-создания JSON‑схем
+- **Никогда не коммитьте `.env`** — он уже добавлен в `.gitignore`
+- Используйте `.env.example` как шаблон для других разработчиков
+- API-ключ NeuralDeep хранится только в переменных окружения
 
-генерации кода FastAPI и Streamlit
+---
 
-проверки корректности RAG‑логики
+##  Демо-данные
 
-Все результаты были проверены вручную и адаптированы под требования тестового задания.
+В `agent/data/sample_project.md` содержится полный пример проекта:
+
+- **Проект**: AI Integration for E-Commerce Platform (RetailTech Corp)
+- **PM**: Alexey Sorokin
+- Требования v1.0 → v1.3, встречи, блокеры, вехи, риски
+
+Используйте его для тестирования всех эндпоинтов без реальных данных.
+
+---
+
+##  Вклад в проект
+
+1. Форкните репозиторий
+2. Создайте ветку: `git checkout -b feature/your-feature`
+3. Закоммитьте изменения: `git commit -m 'Add some feature'`
+4. Отправьте в ветку: `git push origin feature/your-feature`
+5. Откройте Pull Request
+
+---
+
+##  Лицензия
+
+MIT License — используйте свободно.
